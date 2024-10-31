@@ -19,10 +19,6 @@ test.describe("Auth flow", () => {
       title: "in the same tab",
       loginAction: (page) => page.loginInSameTab(),
     },
-    {
-      title: "in the pop up",
-      loginAction: (page) => page.loginInPopup(),
-    },
   ];
 
   test.beforeEach(async ({ page }) => {

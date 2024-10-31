@@ -1,14 +1,12 @@
-import { Page } from "@playwright/test";
-
-type CallbackFunction = () => Promise<void>;
+import { BrowserContext, Page } from "@playwright/test";
 
 export async function waitForPageEvent(
   page: Page,
   type: "popup" | "page",
-  callback?: CallbackFunction
+  callback?: CallableFunction
 ): Promise<Page> {
   const handler = async (newPage: Page) => {
-    await newPage.waitForLoadState();
+    await newPage.waitForLoadState("networkidle");
     return newPage;
   };
 
