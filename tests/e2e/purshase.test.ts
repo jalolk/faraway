@@ -1,5 +1,4 @@
-import { expect } from "@playwright/test";
-import { test } from "../../fixtures/metaMaskFixtures";
+import { test, expect } from "../../fixtures/metaMaskFixtures";
 import { metaMaskWallet } from "../../test-data/metaMaskWallet";
 import { FarawayPage } from "../pages/FarawayPage";
 import { MetaMaskExtension } from "../pages/MetaMaskExtension";

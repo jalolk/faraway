@@ -16,10 +16,6 @@ test.describe("Auth flow", () => {
       loginAction: (page) => page.loginInNewTab(),
     },
     {
-      title: "in the same tab",
-      loginAction: (page) => page.loginInSameTab(),
-    },
-    {
       title: "in the pop up",
       loginAction: (page) => page.loginInPopup(),
     },

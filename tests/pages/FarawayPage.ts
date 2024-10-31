@@ -99,7 +99,14 @@ export class FarawayPage extends BasePage implements PageModel {
   }
 
   async getMintImageUrl(): Promise<string> {
-    const imageUrl = await this.selectors.minting.mintImage.getAttribute("src");
+    const image = this.selectors.minting.mintImage;
+
+    await image.scrollIntoViewIfNeeded();
+    await image.waitFor({ state: "visible" });
+
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for image to load
+
+    const imageUrl = await image.getAttribute("src");
     if (!imageUrl) throw new Error("Image URL is null");
     return imageUrl;
   }

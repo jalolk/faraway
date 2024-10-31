@@ -38,24 +38,24 @@ export class WalletComponent {
   }
 
   async connectWalletAndConfirm(): Promise<void> {
-    const pagePromise = this.page.context().waitForEvent("page");
-    const newPage = await pagePromise;
+    const pagePromise = await this.page.context().waitForEvent("page");
+    const newPage = pagePromise;
 
     const metaMask = new MetaMaskExtension(newPage);
     await metaMask.connectToSite();
   }
 
   async handleNetworkSwitch(): Promise<void> {
-    const pagePromise = this.page.context().waitForEvent("page");
-    const newPage = await pagePromise;
+    const pagePromise = await this.page.context().waitForEvent("page");
+    const newPage = pagePromise;
 
     const metaMask = new MetaMaskExtension(newPage);
     await metaMask.switchNetwork();
   }
 
   async confirmTransaction(): Promise<void> {
-    const pagePromise = this.page.context().waitForEvent("page");
-    const newPage = await pagePromise;
+    const pagePromise = await this.page.context().waitForEvent("page");
+    const newPage = pagePromise;
 
     const metaMask = new MetaMaskExtension(newPage);
     await metaMask.makeTransaction();
