@@ -2,6 +2,8 @@ import { expect, Page } from "@playwright/test";
 import { BasePage } from "./BasicPage";
 import { PageModel } from "../../interfaces/PageModel.inteface";
 import { AuthComponent } from "./components/AuthComponent";
+import { PurchaseComponent } from "./components/PurchaseComponent";
+import { waitForPageEvent } from "../helpers/handler";
 
 export class FarawayPage extends BasePage implements PageModel {
   constructor(page: Page) {
@@ -20,6 +22,17 @@ export class FarawayPage extends BasePage implements PageModel {
       openInPopup: this.page.getByRole("button", { name: "Connect in popup" }),
       connectState: this.page.locator("#connect-state"),
     },
+    settings: {
+      blockchain: this.page.getByLabel("Blockchain"),
+      token: this.page.locator("#coin"),
+    },
+    minting: {
+      mintImage: this.page.locator("#mint-image"),
+    },
+    purchase: {
+      imageUrlField: this.page.getByLabel("Image Url"),
+      submitButton: this.page.locator("#purchase"),
+    },
   } as const;
 
   async navigateTo(): Promise<void> {
@@ -31,31 +44,17 @@ export class FarawayPage extends BasePage implements PageModel {
   }
 
   async loginInNewTab(): Promise<void> {
-    const newPagePromise = new Promise<Page>((resolve) => {
-      this.page.context().on("page", async (newPage: Page) => {
-        await newPage.waitForLoadState();
-        resolve(newPage);
-      });
+    const newPage = await waitForPageEvent(this.page, "page", async () => {
+      await this.selectors.farawayConnect.openInNewTab.click();
     });
-
-    await this.selectors.farawayConnect.openInNewTab.click();
-
-    const newPage = await newPagePromise;
 
     await this.authenticate(newPage);
   }
 
   async loginInPopup(): Promise<void> {
-    const popupPromise = new Promise<Page>((resolve) => {
-      this.page.on("popup", async (popup: Page) => {
-        await popup.waitForLoadState();
-        resolve(popup);
-      });
+    const popup = await waitForPageEvent(this.page, "popup", async () => {
+      await this.selectors.farawayConnect.openInPopup.click();
     });
-
-    await this.selectors.farawayConnect.openInPopup.click();
-
-    const popup = await popupPromise;
 
     await this.authenticate(popup);
   }
@@ -71,5 +70,32 @@ export class FarawayPage extends BasePage implements PageModel {
     await authComponent.verifyRequiredElementsPresent();
 
     await authComponent.login();
+  }
+
+  async isLogged(): Promise<boolean> {
+    return this.selectors.farawayConnect.connectState.isVisible();
+  }
+
+  async changeBlockchain(
+    blockchain: "SOLANA" | "ETHEREUM" | "POLYGON" | "APECHAIN",
+    token: string
+  ): Promise<void> {
+    await this.selectors.settings.blockchain.selectOption(blockchain);
+    await this.selectors.settings.token.fill(token);
+  }
+
+  async purchaseImageWithUrl(imageUrl: string): Promise<void> {
+    await this.selectors.purchase.imageUrlField.fill(imageUrl);
+    await this.selectors.purchase.submitButton.click({
+      delay: 1000,
+    });
+
+    const frameLocator = this.page.frameLocator("iframe");
+
+    const frame = new PurchaseComponent(frameLocator);
+    await frame.verifyRequiredElementsPresent();
+    await frame.connectWallet();
+
+    // TODO: Implement the rest of the purchase flow
   }
 }

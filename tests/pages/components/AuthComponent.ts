@@ -7,6 +7,7 @@ export class AuthComponent implements Partial<PageModel> {
 
   readonly selectors = {
     emailForm: {
+      title: this.page.getByText("Sign up or Log in"),
       emailInput: this.page.getByTestId("email-form-email-input"),
       submitButton: this.page.getByTestId("email-form-submit-button"),
     },
@@ -31,6 +32,8 @@ export class AuthComponent implements Partial<PageModel> {
   }
 
   async verifyRequiredElementsPresent(): Promise<void> {
-    await expect(this.selectors.emailForm.emailInput).toBeVisible();
+    await expect(this.selectors.emailForm.title).toBeVisible({
+      timeout: 10000,
+    });
   }
 }
