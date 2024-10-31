@@ -1,4 +1,4 @@
-import { expect, FrameLocator, Page } from "@playwright/test";
+import { expect, FrameLocator, Locator, Page } from "@playwright/test";
 import { PageModel } from "../../../interfaces/PageModel.inteface";
 
 export class PurchaseComponent implements Partial<PageModel> {
@@ -11,6 +11,9 @@ export class PurchaseComponent implements Partial<PageModel> {
         name: "Pay with Connect a wallet to continue",
       }),
       buyButton: this.frame.getByRole("button", { name: "Buy" }),
+      approveTokenButton: this.frame.getByRole("button", {
+        name: "Approve",
+      }),
     },
     selectPaymentMethodView: {
       payWithMetaMask: this.frame.getByText(/MetaMask/i),
@@ -24,5 +27,14 @@ export class PurchaseComponent implements Partial<PageModel> {
   async connectWallet(): Promise<void> {
     await this.selectors.buyItemView.connectWalletButton.click();
     await this.selectors.selectPaymentMethodView.payWithMetaMask.click();
+  }
+
+  async buyItem(): Promise<void> {
+    await this.selectors.buyItemView.buyButton.isEnabled();
+    await this.selectors.buyItemView.buyButton.click();
+  }
+
+  async getByText(text: string | RegExp): Promise<Locator> {
+    return this.frame.getByText(text);
   }
 }

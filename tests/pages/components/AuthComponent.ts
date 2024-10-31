@@ -32,8 +32,6 @@ export class AuthComponent implements Partial<PageModel> {
   }
 
   async verifyRequiredElementsPresent(): Promise<void> {
-    await expect(this.selectors.emailForm.title).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(this.selectors.emailForm.title).toBeVisible();
   }
 }

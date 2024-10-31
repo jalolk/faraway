@@ -47,6 +47,28 @@ export class MetaMaskExtension extends BasePage implements PageModel {
         name: "Done",
       }),
     },
+    connectWalletToSiteView: {
+      title: this.page.getByRole("heading", { name: "Connect with MetaMask" }),
+      nextButton: this.page.getByRole("button", {
+        name: "Next",
+      }),
+    },
+    permissionsView: {
+      title: this.page.getByRole("heading", { name: "Permissions" }),
+      confirmButton: this.page.getByRole("button", {
+        name: "Confirm",
+      }),
+    },
+    switchNetworkView: {
+      switchButton: this.page.getByRole("button", {
+        name: "Switch network",
+      }),
+    },
+    transactionView: {
+      confirmButton: this.page.getByRole("button", {
+        name: "Confirm",
+      }),
+    },
   } as const;
 
   async navigateTo(): Promise<void> {
@@ -80,5 +102,18 @@ export class MetaMaskExtension extends BasePage implements PageModel {
     await this.selectors.walletCreationSuccessfulView.gotItButton.click();
     await this.selectors.installCompleteView.nextButton.click();
     await this.selectors.installCompleteView.doneButton.click();
+  }
+
+  async connectToSite(): Promise<void> {
+    await this.selectors.connectWalletToSiteView.nextButton.click();
+    await this.selectors.permissionsView.confirmButton.click();
+  }
+
+  async switchNetwork(): Promise<void> {
+    await this.selectors.switchNetworkView.switchButton.click();
+  }
+
+  async makeTransaction(): Promise<void> {
+    await this.selectors.transactionView.confirmButton.click();
   }
 }

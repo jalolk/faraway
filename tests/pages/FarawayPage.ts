@@ -4,6 +4,7 @@ import { PageModel } from "../../interfaces/PageModel.inteface";
 import { AuthComponent } from "./components/AuthComponent";
 import { PurchaseComponent } from "./components/PurchaseComponent";
 import { waitForPageEvent } from "../helpers/handler";
+import { MetaMaskExtension } from "./MetaMaskExtension";
 
 export class FarawayPage extends BasePage implements PageModel {
   constructor(page: Page) {
@@ -94,8 +95,49 @@ export class FarawayPage extends BasePage implements PageModel {
 
     const frame = new PurchaseComponent(frameLocator);
     await frame.verifyRequiredElementsPresent();
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const pagePromise = this.page.context().waitForEvent("page");
+
     await frame.connectWallet();
 
-    // TODO: Implement the rest of the purchase flow
+    const newPage = await pagePromise;
+
+    console.log("Page: ", await newPage.title());
+
+    const metaMaskExtension = new MetaMaskExtension(newPage);
+    await metaMaskExtension.connectToSite();
+
+    const pagePromise2 = this.page.context().waitForEvent("page");
+
+    await frame.buyItem();
+
+    const newPage2 = await pagePromise2;
+
+    const metaMaskExtension2 = new MetaMaskExtension(newPage2);
+    metaMaskExtension2.switchNetwork();
+
+    const pagePromise3 = this.page.context().waitForEvent("page");
+    const newPage3 = await pagePromise3;
+
+    const metaMaskExtension3 = new MetaMaskExtension(newPage3);
+    metaMaskExtension3.makeTransaction();
+
+    await expect(await frame.getByText(/View transaction in/i)).toBeVisible();
+  }
+
+  async handleMetaMaskPopup(
+    callback?: CallableFunction
+  ): Promise<MetaMaskExtension> {
+    const metaMaskPopup = await waitForPageEvent(
+      this.page,
+      "page",
+      async () => {
+        callback ? await callback() : null;
+      }
+    );
+
+    return new MetaMaskExtension(metaMaskPopup);
   }
 }
