@@ -1,14 +1,14 @@
+import { expect } from "@playwright/test";
 import { test } from "../../fixtures/metaMaskFixtures";
 import { metaMaskWallet } from "../../test-data/metaMaskWallet";
 import { FarawayPage } from "../pages/FarawayPage";
 import { MetaMaskExtension } from "../pages/MetaMaskExtension";
 
-test.describe("Purchase flow", () => {
+test.describe("NFT Purchase Flow", () => {
   let farawayPage: FarawayPage;
 
   test.beforeEach(async ({ context }) => {
     farawayPage = new FarawayPage(context.pages()[0]);
-
     await farawayPage.navigateTo();
     await farawayPage.verifyRequiredElementsPresent();
 
@@ -17,24 +17,38 @@ test.describe("Purchase flow", () => {
     await metaMaskExtension.verifyRequiredElementsPresent();
 
     await farawayPage.loginInSameTab();
-
     await metaMaskExtension.importWallet(
       metaMaskWallet.passphrase,
       metaMaskWallet.password
     );
   });
 
-  test("User can make a purchase", async ({ page }) => {
-    await farawayPage.changeBlockchain("ETHEREUM", "USDC");
+  test("should complete NFT purchase with MetaMask wallet", async ({
+    page,
+  }) => {
+    await test.step("prepare purchase", async () => {
+      await farawayPage.changeBlockchain("ETHEREUM", "USDC");
+      const imageUrl = await farawayPage.getMintImageUrl();
+      await farawayPage.fillImageUrl(imageUrl);
+      await farawayPage.submitPurchase();
+    });
 
-    const imageUrl = await farawayPage.selectors.minting.mintImage.getAttribute(
-      "src"
-    );
+    await test.step("connect wallet", async () => {
+      const purchaseFrame = await farawayPage.getPurchaseFrame();
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for frame stability
+      await purchaseFrame.connectWallet();
+      await farawayPage.wallet.connectWalletAndConfirm();
+    });
 
-    if (imageUrl === null) {
-      throw new Error("Image URL is null");
-    }
+    await test.step("complete purchase", async () => {
+      const purchaseFrame = await farawayPage.getPurchaseFrame();
+      await purchaseFrame.buyItem();
+      await farawayPage.wallet.handleNetworkSwitch();
+      await farawayPage.wallet.confirmTransaction();
 
-    await farawayPage.purchaseImageWithUrl(imageUrl);
+      await expect(
+        purchaseFrame.getByText(/View transaction in/i)
+      ).toBeVisible();
+    });
   });
 });

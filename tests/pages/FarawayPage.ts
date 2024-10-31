@@ -3,12 +3,16 @@ import { BasePage } from "./BasicPage";
 import { PageModel } from "../../interfaces/PageModel.inteface";
 import { AuthComponent } from "./components/AuthComponent";
 import { PurchaseComponent } from "./components/PurchaseComponent";
+import { WalletComponent } from "./components/WalletComponent";
 import { waitForPageEvent } from "../helpers/handler";
-import { MetaMaskExtension } from "./MetaMaskExtension";
+import { Blockchain } from "../types";
 
 export class FarawayPage extends BasePage implements PageModel {
+  private readonly walletComponent: WalletComponent;
+
   constructor(page: Page) {
     super(page);
+    this.walletComponent = new WalletComponent(page);
   }
 
   readonly selectors = {
@@ -48,7 +52,6 @@ export class FarawayPage extends BasePage implements PageModel {
     const newPage = await waitForPageEvent(this.page, "page", async () => {
       await this.selectors.farawayConnect.openInNewTab.click();
     });
-
     await this.authenticate(newPage);
   }
 
@@ -56,20 +59,17 @@ export class FarawayPage extends BasePage implements PageModel {
     const popup = await waitForPageEvent(this.page, "popup", async () => {
       await this.selectors.farawayConnect.openInPopup.click();
     });
-
     await this.authenticate(popup);
   }
 
   async loginInSameTab(): Promise<void> {
     await this.selectors.farawayConnect.openInSameTab.click();
-
     await this.authenticate(this.page);
   }
 
-  async authenticate(page: Page): Promise<void> {
+  private async authenticate(page: Page): Promise<void> {
     const authComponent = new AuthComponent(page);
     await authComponent.verifyRequiredElementsPresent();
-
     await authComponent.login();
   }
 
@@ -77,67 +77,50 @@ export class FarawayPage extends BasePage implements PageModel {
     return this.selectors.farawayConnect.connectState.isVisible();
   }
 
-  async changeBlockchain(
-    blockchain: "SOLANA" | "ETHEREUM" | "POLYGON" | "APECHAIN",
-    token: string
-  ): Promise<void> {
+  async changeBlockchain(blockchain: Blockchain, token: string): Promise<void> {
     await this.selectors.settings.blockchain.selectOption(blockchain);
     await this.selectors.settings.token.fill(token);
   }
 
-  async purchaseImageWithUrl(imageUrl: string): Promise<void> {
+  async fillImageUrl(imageUrl: string): Promise<void> {
     await this.selectors.purchase.imageUrlField.fill(imageUrl);
-    await this.selectors.purchase.submitButton.click({
-      delay: 1000,
-    });
-
-    const frameLocator = this.page.frameLocator("iframe");
-
-    const frame = new PurchaseComponent(frameLocator);
-    await frame.verifyRequiredElementsPresent();
-
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    const pagePromise = this.page.context().waitForEvent("page");
-
-    await frame.connectWallet();
-
-    const newPage = await pagePromise;
-
-    console.log("Page: ", await newPage.title());
-
-    const metaMaskExtension = new MetaMaskExtension(newPage);
-    await metaMaskExtension.connectToSite();
-
-    const pagePromise2 = this.page.context().waitForEvent("page");
-
-    await frame.buyItem();
-
-    const newPage2 = await pagePromise2;
-
-    const metaMaskExtension2 = new MetaMaskExtension(newPage2);
-    metaMaskExtension2.switchNetwork();
-
-    const pagePromise3 = this.page.context().waitForEvent("page");
-    const newPage3 = await pagePromise3;
-
-    const metaMaskExtension3 = new MetaMaskExtension(newPage3);
-    metaMaskExtension3.makeTransaction();
-
-    await expect(await frame.getByText(/View transaction in/i)).toBeVisible();
   }
 
-  async handleMetaMaskPopup(
-    callback?: CallableFunction
-  ): Promise<MetaMaskExtension> {
-    const metaMaskPopup = await waitForPageEvent(
-      this.page,
-      "page",
-      async () => {
-        callback ? await callback() : null;
-      }
-    );
+  async submitPurchase(): Promise<void> {
+    await this.selectors.purchase.submitButton.click({ delay: 1000 });
+  }
 
-    return new MetaMaskExtension(metaMaskPopup);
+  async getPurchaseFrame(): Promise<PurchaseComponent> {
+    const purchaseFrame = new PurchaseComponent(
+      this.page.frameLocator("iframe")
+    );
+    await purchaseFrame.verifyRequiredElementsPresent();
+    return purchaseFrame;
+  }
+
+  async getMintImageUrl(): Promise<string> {
+    const imageUrl = await this.selectors.minting.mintImage.getAttribute("src");
+    if (!imageUrl) throw new Error("Image URL is null");
+    return imageUrl;
+  }
+
+  async handleMetaMaskPopup(callback?: CallableFunction): Promise<void> {
+    await this.walletComponent.handleMetaMaskPopup(callback);
+  }
+
+  async connectWalletAndConfirm(): Promise<void> {
+    await this.walletComponent.connectWalletAndConfirm();
+  }
+
+  async handleNetworkSwitch(): Promise<void> {
+    await this.walletComponent.handleNetworkSwitch();
+  }
+
+  async confirmTransaction(): Promise<void> {
+    await this.walletComponent.confirmTransaction();
+  }
+
+  get wallet(): WalletComponent {
+    return this.walletComponent;
   }
 }
