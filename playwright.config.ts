@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import path from "path";
 
 /**
  * Read environment variables from file.
@@ -12,6 +13,7 @@ import { defineConfig, devices } from "@playwright/test";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
+  globalSetup: require.resolve("./global-setup"),
   testDir: "./tests",
   timeout: 90000,
   expect: {
