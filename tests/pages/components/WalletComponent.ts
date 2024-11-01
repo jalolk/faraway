@@ -1,6 +1,5 @@
 import { Page } from "@playwright/test";
 import { MetaMaskExtension } from "../MetaMaskExtension";
-import { waitForPageEvent } from "../../helpers/handler";
 
 export class WalletComponent {
   constructor(private readonly page: Page) {}
