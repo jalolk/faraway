@@ -1,4 +1,4 @@
-import { BrowserContext, Page } from "@playwright/test";
+import { Page } from "@playwright/test";
 
 export async function waitForPageEvent(
   page: Page,
@@ -11,9 +11,17 @@ export async function waitForPageEvent(
   };
 
   const pagePromise = new Promise<Page>((resolve) => {
-    type === "popup"
-      ? page.on("popup", (popup) => resolve(handler(popup)))
-      : page.context().on("page", (newPage) => resolve(handler(newPage)));
+    if (type === "popup") {
+      page.on("popup", async (popup) => {
+        const handledPage = await handler(popup);
+        resolve(handledPage);
+      });
+    } else {
+      page.context().on("page", async (newPage) => {
+        const handledPage = await handler(newPage);
+        resolve(handledPage);
+      });
+    }
   });
 
   if (callback) {
