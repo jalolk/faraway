@@ -24,19 +24,6 @@ export class WalletComponent {
     },
   } as const;
 
-  async handleMetaMaskPopup(
-    callback?: CallableFunction
-  ): Promise<MetaMaskExtension> {
-    const metaMaskPopup = await waitForPageEvent(
-      this.page,
-      "page",
-      async () => {
-        callback && (await callback());
-      }
-    );
-    return new MetaMaskExtension(metaMaskPopup);
-  }
-
   async connectWalletAndConfirm(): Promise<void> {
     const pagePromise = await this.page.context().waitForEvent("page");
     const newPage = pagePromise;

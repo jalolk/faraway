@@ -73,10 +73,6 @@ export class FarawayPage extends BasePage implements PageModel {
     await authComponent.login();
   }
 
-  async isLogged(): Promise<boolean> {
-    return this.selectors.farawayConnect.connectState.isVisible();
-  }
-
   async changeBlockchain(blockchain: Blockchain, token: string): Promise<void> {
     await this.selectors.settings.blockchain.selectOption(blockchain);
     await this.selectors.settings.token.fill(token);
@@ -109,10 +105,6 @@ export class FarawayPage extends BasePage implements PageModel {
     const imageUrl = await image.getAttribute("src");
     if (!imageUrl) throw new Error("Image URL is null");
     return imageUrl;
-  }
-
-  async handleMetaMaskPopup(callback?: CallableFunction): Promise<void> {
-    await this.walletComponent.handleMetaMaskPopup(callback);
   }
 
   async connectWalletAndConfirm(): Promise<void> {
